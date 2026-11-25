@@ -1,5 +1,7 @@
 html { scroll-behavior: smooth; }
 body { margin: 0; direction: rtl; }
+.page-title { flex: 1; }
+.page-actions { flex-wrap: wrap; }
 .settings-layout { align-items: flex-start; }
 .settings-anchors { position: sticky; top: var(--spacing-4); min-width: 12rem; }
 .settings-sections { min-width: 0; flex: 1; }
