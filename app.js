@@ -122,7 +122,25 @@ function toggleTask(id) { const t = data.tasks.find(x => x.id === id); if (!t) r
 function openQuote(id) { newQuote(id); }
 function toast(message) { const region = document.getElementById("toast-region"), el = document.createElement("div"); el.className = "toast"; el.textContent = message; region.append(el); setTimeout(() => el.remove(), 2800); }
 function bindContent() {
-  content.querySelectorAll("[data-action]").forEach(el => el.addEventListener("click", () => ({ "new-quote": () => newQuote(), "new-task": () => newTask(), "new-contact": newContact, "new-document": newDocument, "new-payment": newPayment, "help": () => toast("מרכז העזרה יהיה זמין בקרוב."), "template": () => showModal("תבנית הצעה", "עריכת תבנית מקומית.", `<div class="form-grid">${field("שם התבנית", "title", "שם קצר", "text", true)}<div class="field full"><label for="f-description">תוכן</label><textarea id="f-description" name="description" placeholder="תיאור השירות והתנאים"></textarea></div></div>`, "שמירה", () => { toast("התבנית נשמרה."); })), "export-contacts": () => { const rows = ["name,company,phone,email", ...data.contacts.map(c => [c.name,c.company,c.phone,c.email].map(v => `"${String(v || "").replaceAll('"','""')}"`).join(","))].join("\n"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + rows], { type:"text/csv;charset=utf-8" })); a.download = "contacts.csv"; a.click(); URL.revokeObjectURL(a.href); toast("רשימת אנשי הקשר יוצאה לקובץ."); } })[el.dataset.action]?.()));
+  const actions = {
+    "new-quote": () => newQuote(),
+    "new-task": () => newTask(),
+    "new-contact": newContact,
+    "new-document": newDocument,
+    "new-payment": newPayment,
+    help: () => toast("מרכז העזרה יהיה זמין בקרוב."),
+    template: () => showModal("תבנית הצעה", "עריכת תבנית מקומית.", `<div class="form-grid">${field("שם התבנית", "title", "שם קצר", "text", true)}<div class="field full"><label for="f-description">תוכן</label><textarea id="f-description" name="description" placeholder="תיאור השירות והתנאים"></textarea></div></div>`, "שמירה", () => { toast("התבנית נשמרה."); }),
+    "export-contacts": () => {
+      const rows = ["name,company,phone,email", ...data.contacts.map(c => [c.name, c.company, c.phone, c.email].map(v => `"${String(v || "").replaceAll('"', '""')}"`).join(","))].join("\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob(["\ufeff" + rows], { type: "text/csv;charset=utf-8" }));
+      a.download = "contacts.csv";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast("רשימת אנשי הקשר יוצאה לקובץ.");
+    }
+  };
+  content.querySelectorAll("[data-action]").forEach(el => el.addEventListener("click", () => actions[el.dataset.action]?.()));
   content.querySelectorAll("[data-page]").forEach(el => el.addEventListener("click", () => setPage(el.dataset.page)));
   content.querySelectorAll("[data-open-quote]").forEach(el => el.addEventListener("click", e => { e.stopPropagation(); openQuote(el.dataset.openQuote); }));
   content.querySelectorAll("[data-toggle-task]").forEach(el => el.addEventListener("click", () => toggleTask(el.dataset.toggleTask)));
