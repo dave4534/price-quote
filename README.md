@@ -1,23 +1,22 @@
 # QuoteDesk
 
-QuoteDesk is a self-contained Hebrew, right-to-left workspace for preparing and tracking quotes, tasks, contacts, signature documents, and payment requests.
+Hebrew right-to-left quote management interface built with React, Vite, and Astryx Design System.
 
 ## Run locally
 
-Open `index.html` in a modern browser, or serve this directory with any static file server. No package installation or build step is required.
+```sh
+npm install
+npm run dev
+```
 
-## What is included
+## Included workflows
 
-- Quote dashboard with status totals, activity chart, search, status filter, and quote editor.
-- Task list with due dates, completion state, and local editing.
-- Contact directory with search, creation, and CSV export.
-- Signature document list and local draft creation flow.
-- Payment request interface that records local requests without processing payments.
-- Profile, business, preference, and reusable quote template settings.
-- Responsive layout for desktop and mobile, in Hebrew RTL.
+- Quote list with search, status filters, totals, itemized pricing, editing, duplication, and deletion.
+- Contact directory with search, create/edit, and starting a quote for a contact.
+- Signature-document list and local draft form with recipient, due date, signature option, and optional PDF selection.
+- Payment-provider information and a local eligibility form.
+- One continuous settings page with side anchors.
 
-All sample records are synthetic. Changes are saved to this browser's local storage. The demo does not send messages, upload documents, collect payments, or connect to external services.
+Records use synthetic examples and are stored in the current browser's local storage. Signature delivery, payment processing, and sending documents require provider integrations and are not connected.
 
-## Scope
-
-The interface intentionally leaves out invoicing, statistics, business expenses, and business card features.
+Invoices, statistics, business expenses, business cards, and Tasks are excluded.

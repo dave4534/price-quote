@@ -1,0 +1,11 @@
+html { scroll-behavior: smooth; }
+body { margin: 0; direction: rtl; }
+.settings-layout { align-items: flex-start; }
+.settings-anchors { position: sticky; top: var(--spacing-4); min-width: 12rem; }
+.settings-sections { min-width: 0; flex: 1; }
+.settings-sections > section { scroll-margin-block-start: var(--spacing-4); }
+@media (max-width: 760px) {
+  .settings-layout { flex-direction: column; }
+  .settings-anchors { position: static; width: 100%; }
+  .settings-sections { width: 100%; }
+}

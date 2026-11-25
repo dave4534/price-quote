@@ -1,0 +1,18 @@
+{
+  "name": "quotedesk-reconstruction",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {"dev":"vite --host 0.0.0.0","build":"vite build","preview":"vite preview --host 0.0.0.0"},
+  "dependencies": {
+    "@astryxdesign/cli":"^0.7.17",
+    "@astryxdesign/core":"^0.7.17",
+    "@astryxdesign/theme-neutral":"^0.7.17",
+    "@stylexjs/stylex":"^0.19.2",
+    "@vitejs/plugin-react":"^4.7.0",
+    "react":"^19.3.1",
+    "react-dom":"^19.3.1",
+    "vite":"^6.4.6"
+  },
+  "devDependencies": {}
+}

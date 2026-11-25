@@ -1,0 +1,129 @@
+import React, {useEffect, useMemo, useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import '@astryxdesign/core/reset.css';
+import '@astryxdesign/core/astryx.css';
+import '@astryxdesign/theme-neutral/theme.css';
+import {Theme, defineTheme} from '@astryxdesign/core/theme';
+import {neutralTheme} from '@astryxdesign/theme-neutral';
+import {AppShell} from '@astryxdesign/core/AppShell';
+import {SideNav, SideNavHeading, SideNavItem, SideNavSection} from '@astryxdesign/core/SideNav';
+import {Layout, LayoutContent, LayoutHeader, VStack, HStack} from '@astryxdesign/core/Layout';
+import {Section} from '@astryxdesign/core/Section';
+import {Heading, Text} from '@astryxdesign/core/Text';
+import {Button} from '@astryxdesign/core/Button';
+import {TextInput} from '@astryxdesign/core/TextInput';
+import {FileInput} from '@astryxdesign/core/FileInput';
+import {CheckboxInput} from '@astryxdesign/core/CheckboxInput';
+import {Table} from '@astryxdesign/core/Table';
+import {Badge} from '@astryxdesign/core/Badge';
+import {Divider} from '@astryxdesign/core/Divider';
+import {Dialog, DialogHeader} from '@astryxdesign/core/Dialog';
+import {Outline} from '@astryxdesign/core/Outline';
+import './site.css';
+
+const KEYS = {quotes:'quotedesk.quotes.v2', contacts:'quotedesk.contacts.v2', documents:'quotedesk.documents.v2', settings:'quotedesk.settings.v2'};
+const today = new Date().toISOString().slice(0,10);
+const seedQuotes = [
+  {id:'q-104',number:'104',title:'שיפוץ מטבח',customer:'משפחת כהן',amount:24500,status:'ממתינה לאישור',date:today,expiry:'',arrival:'',terms:'',signature:true,items:[{name:'עבודות נגרות',unit:'פרויקט',qty:1,price:16000},{name:'משטח עבודה',unit:'יחידה',qty:1,price:8500}]},
+  {id:'q-103',number:'103',title:'עיצוב אתר תדמית',customer:'סטודיו נגה',amount:12800,status:'נחתמה',date:today,expiry:'',arrival:'',terms:'',signature:true,items:[{name:'עיצוב ופיתוח',unit:'פרויקט',qty:1,price:12800}]},
+  {id:'q-102',number:'102',title:'ייעוץ עסקי חודשי',customer:'אורן לוי',amount:4200,status:'טיוטה',date:today,expiry:'',arrival:'',terms:'',signature:false,items:[{name:'ייעוץ',unit:'חודש',qty:1,price:4200}]},
+];
+const seedContacts = [
+  {id:'c-1',name:'משפחת כהן',type:'פרטי',phone:'050-000-0101',email:'cohen@example.com',address:'תל אביב'},
+  {id:'c-2',name:'סטודיו נגה',type:'עסקי',phone:'050-000-0102',email:'office@example.com',address:'חיפה'},
+  {id:'c-3',name:'אורן לוי',type:'פרטי',phone:'050-000-0103',email:'oren@example.com',address:'ירושלים'},
+];
+const seedDocs = [{id:'d-1',title:'הסכם שירות — סטודיו נגה',recipient:'סטודיו נגה',created:today,due:'',status:'ממתין לחתימה',signature:true,preamble:'הסכם למתן שירותים'}];
+const NAV = [
+  {id:'quotes',label:'הצעות מחיר',icon:'document'},
+  {id:'contacts',label:'אנשי קשר',icon:'people'},
+  {id:'signatures',label:'מסמכים לחתימה',icon:'edit'},
+  {id:'payments',label:'קבלת תשלומים',icon:'credit-card'},
+  {id:'settings',label:'הגדרות',icon:'settings'},
+];
+const accentSeeds = {כחול:'#3559c7',ירוק:'#39765b',סגול:'#7656a8',אפור:'#5f6670'};
+function load(key, fallback){try{const raw=localStorage.getItem(key); return raw?JSON.parse(raw):fallback;}catch{return fallback;}}
+function save(key,value){localStorage.setItem(key,JSON.stringify(value));}
+function money(value){return new Intl.NumberFormat('he-IL',{style:'currency',currency:'ILS',maximumFractionDigits:0}).format(Number(value)||0);}
+function uid(prefix){return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;}
+function App(){
+  const [quotes,setQuotes]=useState(()=>load(KEYS.quotes,seedQuotes));
+  const [contacts,setContacts]=useState(()=>load(KEYS.contacts,seedContacts));
+  const [documents,setDocuments]=useState(()=>load(KEYS.documents,seedDocs));
+  const [settings,setSettings]=useState(()=>load(KEYS.settings,{business:'העסק שלי',owner:'',email:'',phone:'',address:'',color:'כחול',terms:'תנאי התשלום יסוכמו מול הלקוח.'}));
+  const [page,setPage]=useState('quotes');
+  const [quoteDialog,setQuoteDialog]=useState(false);
+  const [contactDialog,setContactDialog]=useState(false);
+  const [docDialog,setDocDialog]=useState(false);
+  const [editQuote,setEditQuote]=useState(null);
+  const [editContact,setEditContact]=useState(null);
+  const [quoteToDelete,setQuoteToDelete]=useState(null);
+  const [search,setSearch]=useState('');
+  const [filter,setFilter]=useState('הכל');
+  const [notice,setNotice]=useState('');
+  const appTheme=useMemo(()=>defineTheme({name:`quotedesk-${settings.color||'כחול'}`,extends:neutralTheme,color:{accent:accentSeeds[settings.color]||accentSeeds.כחול}}),[settings.color]);
+  useEffect(()=>save(KEYS.quotes,quotes),[quotes]);
+  useEffect(()=>save(KEYS.contacts,contacts),[contacts]);
+  useEffect(()=>save(KEYS.documents,documents),[documents]);
+  useEffect(()=>save(KEYS.settings,settings),[settings]);
+  useEffect(()=>{if(!notice)return; const t=setTimeout(()=>setNotice(''),3200);return()=>clearTimeout(t);},[notice]);
+  const go=(id)=>{setPage(id);setSearch('');window.scrollTo({top:0,behavior:'smooth'});};
+  const filteredQuotes=useMemo(()=>quotes.filter(q=>(filter==='הכל'||q.status===filter)&&`${q.number} ${q.title} ${q.customer}`.toLowerCase().includes(search.toLowerCase())),[quotes,filter,search]);
+  const openNewQuote=()=>{setEditQuote({...blankQuote(),terms:settings.terms,signature:settings.defaultSignature!==false});setQuoteDialog(true);};
+  const openQuote=(q)=>{setEditQuote(q);setQuoteDialog(true);};
+  const saveQuote=(quote)=>{setQuotes(current=>{const found=current.some(item=>item.id===quote.id);return found?current.map(item=>item.id===quote.id?quote:item):[quote,...current];});setQuoteDialog(false);setNotice('הצעת המחיר נשמרה');};
+  const saveContact=(contact)=>{setContacts(current=>contact.id?current.map(c=>c.id===contact.id?contact:c):[{...contact,id:uid('c')} ,...current]);setContactDialog(false);setNotice('איש הקשר נשמר');};
+  const saveDoc=(doc)=>{setDocuments(current=>[{...doc,id:uid('d'),created:today,status:'ממתין לחתימה'},...current]);setDocDialog(false);setNotice('המסמך נשמר כטיוטת שליחה');};
+  const quoteColumns=[
+    {key:'number',header:'מס׳ הצעה',renderCell:q=><Button label={`#${q.number}`} variant="ghost" onClick={()=>openQuote(q)}/>},
+    {key:'title',header:'שם ההצעה',renderCell:q=><Button label={q.title||'ללא כותרת'} variant="ghost" onClick={()=>openQuote(q)}/>},
+    {key:'customer',header:'לקוח'},
+    {key:'date',header:'תאריך'},
+    {key:'amount',header:'סכום',renderCell:q=>money(q.amount)},
+    {key:'status',header:'סטטוס',renderCell:q=><Badge label={q.status} color={q.status==='נחתמה'?'success':q.status==='נדחתה'?'error':'neutral'}/>},
+    {key:'actions',header:'פעולות',renderCell:q=><HStack gap={1}><Button label="עריכה" size="sm" onClick={()=>openQuote(q)}/><Button label="שכפול" size="sm" onClick={()=>setQuotes(current=>[{...q,id:uid('q'),number:String(Date.now()).slice(-4),title:`${q.title} — העתק`,status:'טיוטה',date:today},...current])}/><Button label="מחיקה" size="sm" variant="ghost" onClick={()=>setQuoteToDelete(q)}/></HStack>},
+  ];
+  const docColumns=[{key:'title',header:'שם המסמך'},{key:'recipient',header:'נמען'},{key:'created',header:'נוצר בתאריך'},{key:'due',header:'תאריך יעד'},{key:'קובץ',header:'קובץ PDF',renderCell:d=>d.attachmentName||'—'},{key:'status',header:'סטטוס',renderCell:d=><Badge label={d.status} color={d.status==='נחתם'?'success':'neutral'}/>},{key:'actions',header:'פעולות',renderCell:d=><Button label="תזכורת" size="sm" onClick={()=>setNotice('תזכורת נשמרה. חיבור לשליחת דוא״ל יידרש כדי להעביר אותה לנמען.')}/> }];
+  const contactColumns=[{key:'name',header:'שם',renderCell:c=><Button label={c.name} variant="ghost" onClick={()=>{setEditContact(c);setContactDialog(true);}}/>},{key:'type',header:'סוג'},{key:'phone',header:'טלפון'},{key:'email',header:'דוא״ל'},{key:'address',header:'כתובת'},{key:'actions',header:'פעולות',renderCell:c=><Button label="הצעה חדשה" size="sm" onClick={()=>{setEditQuote({...blankQuote(),customer:c.name,terms:settings.terms,signature:settings.defaultSignature!==false});setQuoteDialog(true);}}/>}];
+  const summary=quotes.reduce((s,q)=>{s.total+=Number(q.amount)||0;if(q.status==='נחתמה')s.signed++;if(q.status==='ממתינה לאישור')s.waiting++;return s;},{total:0,signed:0,waiting:0});
+  return <Theme theme={appTheme} mode="light"><AppShell height="auto" contentPadding={4} variant="surface" sideNav={<SideNav collapsible header={<SideNavHeading heading="QuoteDesk" subheading="ניהול העסק"/>} footer={<Text type="supporting" color="secondary">הצעות מחיר ואנשי קשר</Text>}><SideNavSection title="ניהול"><>{NAV.map(item=><SideNavItem key={item.id} label={item.label} icon={item.icon} isSelected={page===item.id} onClick={()=>go(item.id)}/>)}</></SideNavSection></SideNav>}>
+    <Layout height="auto" content={<LayoutContent padding={2}><VStack gap={4}>
+      <LayoutHeader hasDivider><HStack vAlign="center" wrap="wrap" gap={2}><Heading level={1}>{NAV.find(n=>n.id===page)?.label}</Heading><HStack gap={2}>{page==='quotes'&&<><TextInput label="חיפוש הצעות" isLabelHidden value={search} onChange={setSearch} placeholder="חיפוש לפי שם, לקוח או מספר"/><Button label="הצעת מחיר חדשה" variant="primary" onClick={openNewQuote}/></>}{page==='contacts'&&<><TextInput label="חיפוש אנשי קשר" isLabelHidden value={search} onChange={setSearch} placeholder="חיפוש אנשי קשר"/><Button label="איש קשר חדש" variant="primary" onClick={()=>setContactDialog(true)}/></>}{page==='signatures'&&<Button label="מסמך חדש" variant="primary" onClick={()=>setDocDialog(true)}/>}</HStack></HStack></LayoutHeader>
+      {page==='quotes'&&<>
+        <HStack wrap="wrap" gap={2}>{metric('אחוז המרה',quotes.length?`${Math.round(summary.signed/quotes.length*100)}%`:'0%')}{metric('ממתינות לאישור',summary.waiting)}{metric('נחתמו',summary.signed)}{metric('סך הצעות',money(summary.total))}</HStack>
+        <Section><VStack gap={3}><HStack wrap="wrap" gap={1}>{['הכל','טיוטה','ממתינה לאישור','נחתמה','נדחתה'].map(v=><Button key={v} label={v} variant={filter===v?'primary':'secondary'} size="sm" onClick={()=>setFilter(v)}/>)}</HStack><Table data={filteredQuotes} columns={quoteColumns} idKey="id" hasHover emptyState={<Text>לא נמצאו הצעות מחיר מתאימות.</Text>}/></VStack></Section>
+      </>}
+    {page==='contacts'&&<Section><Table data={contacts.filter(c=>`${c.name} ${c.phone} ${c.email}`.toLowerCase().includes(search.toLowerCase()))} columns={contactColumns} idKey="id" hasHover emptyState={<Text>אין אנשי קשר להצגה.</Text>}/></Section>}
+      {page==='signatures'&&<><HStack gap={2} wrap="wrap">{metric('ממתינים לחתימה',documents.filter(d=>d.status==='ממתין לחתימה').length)}{metric('נחתמו',documents.filter(d=>d.status==='נחתם').length)}</HStack><Section><Table data={documents} columns={docColumns} idKey="id" hasHover emptyState={<Text>אין מסמכים להצגה.</Text>}/></Section></>}
+      {page==='payments'&&<Payments notice={setNotice}/>}
+      {page==='settings'&&<Settings settings={settings} onChange={setSettings} notice={setNotice}/>}
+      {notice&&<Section variant="muted"><Text role="status">{notice}</Text></Section>}
+    </VStack></LayoutContent>} />
+  </AppShell>
+  <QuoteDialog open={quoteDialog} onOpenChange={setQuoteDialog} quote={editQuote} contacts={contacts} onSave={saveQuote}/>
+  <ContactDialog open={contactDialog} onOpenChange={(value)=>{setContactDialog(value);if(!value)setEditContact(null);}} contact={editContact} onSave={saveContact}/>
+  <DocumentDialog open={docDialog} onOpenChange={setDocDialog} contacts={contacts} onSave={saveDoc}/>
+  <Dialog isOpen={Boolean(quoteToDelete)} onOpenChange={(value)=>{if(!value)setQuoteToDelete(null);}} width="min(420px, 94vw)" purpose="required"><VStack gap={3}><DialogHeader><Heading level={2}>מחיקת הצעת מחיר</Heading></DialogHeader><Text>למחוק את ההצעה {quoteToDelete?.title || `#${quoteToDelete?.number}`}?</Text><HStack justify="end"><Button label="ביטול" onClick={()=>setQuoteToDelete(null)}/><Button label="מחיקת הצעה" variant="destructive" onClick={()=>{setQuotes(current=>current.filter(q=>q.id!==quoteToDelete?.id));setQuoteToDelete(null);setNotice('הצעת המחיר נמחקה');}}/></HStack></VStack></Dialog>
+  </Theme>;
+}
+function metric(label,value){return <Section key={label} variant="muted" padding={3}><VStack gap={1}><Text type="supporting" color="secondary">{label}</Text><Heading level={2}>{value}</Heading></VStack></Section>;}
+function nextStatus(status){const order=['טיוטה','ממתינה לאישור','נחתמה','נדחתה'];return order[(order.indexOf(status)+1)%order.length];}
+function blankQuote(){return {id:uid('q'),number:String(Date.now()).slice(-4),title:'',customer:'',customerType:'פרטי',pricingMode:'items',amount:0,status:'טיוטה',date:today,expiry:'',arrival:'',arrivalTime:'',terms:'',signature:true,items:[{name:'',unit:'יחידה',qty:1,price:0}],workDetails:'',aboutBusiness:''};}
+function QuoteDialog({open,onOpenChange,quote,contacts,onSave}){
+  const [form,setForm]=useState(blankQuote);
+  useEffect(()=>{if(open)setForm(quote?{...blankQuote(),...quote,items:quote.items?.length?quote.items:[{name:'',unit:'יחידה',qty:1,price:0}]}:blankQuote());},[open,quote]);
+  const set=(key,value)=>setForm(v=>({...v,[key]:value}));
+  const setItem=(i,key,value)=>setForm(v=>{const items=v.items.map((item,n)=>n===i?{...item,[key]:value}:item);return {...v,items,amount:items.reduce((sum,item)=>sum+(Number(item.qty)||0)*(Number(item.price)||0),0)};});
+  const addItem=()=>setForm(v=>({...v,items:[...v.items,{name:'',unit:'יחידה',qty:1,price:0}]}));
+  return <Dialog isOpen={open} onOpenChange={onOpenChange} width="min(760px, 94vw)" maxHeight="90dvh" purpose="form"><VStack gap={3}><DialogHeader><Heading level={2}>{quote?'עריכת הצעת מחיר':'הצעת מחיר חדשה'}</Heading></DialogHeader>
+    <VStack gap={2}><HStack wrap="wrap" gap={2}><TextInput label="מספר הצעה" value={form.number} onChange={v=>set('number',v)}/><TextInput label="שם ההצעה" value={form.title} onChange={v=>set('title',v)} isRequired/><TextInput label="לקוח" value={form.customer} onChange={v=>set('customer',v)} placeholder={contacts.map(c=>c.name).join(' · ')}/><TextInput label="סוג לקוח" value={form.customerType} onChange={v=>set('customerType',v)} placeholder="פרטי או עסקי"/><TextInput label="תאריך" value={form.date} onChange={v=>set('date',v)}/></HStack>
+    <Heading level={3}>פריטים ותמחור</Heading><HStack gap={1}><Button label="מחיר קבוע" variant={form.pricingMode==='fixed'?'primary':'secondary'} onClick={()=>set('pricingMode','fixed')}/><Button label="מחיר לפי פריטים" variant={form.pricingMode==='items'?'primary':'secondary'} onClick={()=>set('pricingMode','items')}/></HStack>{form.pricingMode==='fixed'?<TextInput label="מחיר קבוע להצעה" value={String(form.amount||0)} onChange={v=>set('amount',v)}/>:<>{form.items.map((item,i)=><HStack key={i} wrap="wrap" gap={1}><TextInput label="תיאור הפריט" value={item.name} onChange={v=>setItem(i,'name',v)}/><TextInput label="יחידה" value={item.unit} onChange={v=>setItem(i,'unit',v)}/><TextInput label="כמות" value={String(item.qty)} onChange={v=>setItem(i,'qty',v)}/><TextInput label="מחיר ליחידה" value={String(item.price)} onChange={v=>setItem(i,'price',v)}/>{form.items.length>1&&<Button label="הסרה" variant="ghost" onClick={()=>setForm(v=>({...v,items:v.items.filter((_,n)=>n!==i)}))}/>}</HStack>)}<Button label="הוספת פריט" onClick={addItem}/></>}<Heading level={3}>סה״כ: {money(form.pricingMode==='fixed'?form.amount:form.items.reduce((sum,item)=>sum+(Number(item.qty)||0)*(Number(item.price)||0),0))}</Heading>
+    <TextInput label="פירוט העבודה" value={form.workDetails||''} onChange={v=>set('workDetails',v)}/><TextInput label="תנאים והערות" value={form.terms||''} onChange={v=>set('terms',v)}/><TextInput label="אודות העסק" value={form.aboutBusiness||''} onChange={v=>set('aboutBusiness',v)}/><HStack wrap="wrap" gap={2}><TextInput label="תאריך הגעה" value={form.arrival||''} onChange={v=>set('arrival',v)}/><TextInput label="שעת הגעה" value={form.arrivalTime||''} onChange={v=>set('arrivalTime',v)}/><TextInput label="תוקף ההצעה" value={form.expiry||''} onChange={v=>set('expiry',v)}/><TextInput label="סטטוס" value={form.status} onChange={v=>set('status',v)}/></HStack><CheckboxInput label="לאפשר חתימה דיגיטלית" value={Boolean(form.signature)} onChange={v=>set('signature',v)}/>
+    </VStack><HStack justify="end" gap={2}><Button label="ביטול" onClick={()=>onOpenChange(false)}/><Button label="שמירה" variant="primary" onClick={()=>onSave({...form,amount:form.pricingMode==='fixed'?Number(form.amount)||0:form.items.reduce((sum,item)=>sum+(Number(item.qty)||0)*(Number(item.price)||0),0)})}/></HStack></VStack></Dialog>;
+}
+function ContactDialog({open,onOpenChange,onSave,contact}){const [form,setForm]=useState({name:'',type:'פרטי',phone:'',email:'',address:''});useEffect(()=>{if(open)setForm(contact?{...contact}:{name:'',type:'פרטי',phone:'',email:'',address:''});},[open,contact]);const set=(key,v)=>setForm(s=>({...s,[key]:v}));return <Dialog isOpen={open} onOpenChange={onOpenChange} width="min(600px, 94vw)" purpose="form"><VStack gap={3}><DialogHeader><Heading level={2}>{contact?'עריכת איש קשר':'איש קשר חדש'}</Heading></DialogHeader><TextInput label="שם" value={form.name} onChange={v=>set('name',v)} isRequired/><HStack gap={2} wrap="wrap"><TextInput label="סוג לקוח (פרטי או עסקי)" value={form.type} onChange={v=>set('type',v)}/><TextInput label="טלפון" value={form.phone} onChange={v=>set('phone',v)}/></HStack><TextInput label="דוא״ל" type="email" value={form.email} onChange={v=>set('email',v)}/><TextInput label="כתובת" value={form.address} onChange={v=>set('address',v)}/><HStack justify="end"><Button label="ביטול" onClick={()=>onOpenChange(false)}/><Button label="שמירה" variant="primary" onClick={()=>onSave(form)} isDisabled={!form.name.trim()}/></HStack></VStack></Dialog>;}
+function DocumentDialog({open,onOpenChange,contacts,onSave}){const [form,setForm]=useState({title:'',recipient:'',due:'',preamble:'',signature:true,password:'',attachmentName:''});const [file,setFile]=useState(null);useEffect(()=>{if(open){setForm({title:'',recipient:'',due:'',preamble:'',signature:true,password:'',attachmentName:''});setFile(null);}},[open]);const set=(key,v)=>setForm(s=>({...s,[key]:v}));return <Dialog isOpen={open} onOpenChange={onOpenChange} width="min(680px, 94vw)" purpose="form"><VStack gap={3}><DialogHeader><Heading level={2}>מסמך חדש לחתימה</Heading></DialogHeader><HStack gap={1}><Button label="תבנית הסכם שירות" onClick={()=>setForm(s=>({...s,title:s.title||'הסכם שירות',preamble:s.preamble||'הסכם למתן שירותים'}))}/><Button label="התחלה ממסמך ריק" onClick={()=>setForm(s=>({...s,title:'',preamble:''}))}/></HStack><TextInput label="כותרת המסמך" value={form.title} onChange={v=>set('title',v)} isRequired/><TextInput label="נמען" value={form.recipient} onChange={v=>set('recipient',v)} placeholder={contacts.map(c=>c.name).join(' · ')}/><TextInput label="תאריך יעד" value={form.due} onChange={v=>set('due',v)}/><TextInput label="פתיח" value={form.preamble} onChange={v=>set('preamble',v)}/><FileInput label="צירוף מסמך PDF" value={file} onChange={files=>{const chosen=Array.isArray(files)?files[0]:files;setFile(chosen||null);set('attachmentName',chosen?.name||'');}} accept="application/pdf" maxSize={5242880} description="אפשר לבחור קובץ עד 5 MB. הרשומה המקומית תשמור את שם הקובץ בלבד."/><TextInput label="סיסמה להגנה (אופציונלי)" type="password" value={form.password} onChange={v=>set('password',v)}/><CheckboxInput label="חתימה דיגיטלית" value={form.signature} onChange={v=>set('signature',v)}/><Text color="secondary">המסמך נשמר כרשומה מקומית. שליחה ואיסוף חתימות בפועל דורשים חיבור לשירות חתימות.</Text><HStack justify="end"><Button label="ביטול" onClick={()=>onOpenChange(false)}/><Button label="שמירת מסמך" variant="primary" onClick={()=>onSave(form)} isDisabled={!form.title.trim()}/></HStack></VStack></Dialog>;}
+function Settings({settings,onChange,notice}){const items=[{id:'business',label:'הגדרות העסק'},{id:'personal',label:'הגדרות אישיות'},{id:'design',label:'עיצוב וצבעים'},{id:'saved',label:'תוכן שמור'},{id:'signature',label:'הגדרות חתימה'},{id:'templates',label:'תבניות מוכנות'}];const [active,setActive]=useState(items[0].id);const update=(key,value)=>onChange({...settings,[key]:value});const jump=(id)=>{setActive(id);document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});};useEffect(()=>{const obs=new IntersectionObserver(entries=>{const current=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];if(current)setActive(current.target.id);},{rootMargin:'-20% 0px -65% 0px'});items.forEach(i=>{const el=document.getElementById(i.id);if(el)obs.observe(el);});return()=>obs.disconnect();},[]);return <HStack gap={4} align="start" className="settings-layout"><VStack gap={1} className="settings-anchors"><Outline label="מקטעי הגדרות" activeId={active} hasScrollOnClick={false} items={items.map(i=>({id:i.id,label:i.label}))} onActiveIdChange={jump}/></VStack><VStack gap={4} className="settings-sections">{items.map((item,index)=><Section key={item.id} padding={4}><VStack gap={3}><Heading id={item.id} level={2}>{item.label}</Heading>{index===0&&<><TextInput label="שם העסק" value={settings.business} onChange={v=>update('business',v)}/><TextInput label="שם בעל העסק" value={settings.owner} onChange={v=>update('owner',v)}/><TextInput label="טלפון העסק" value={settings.phone} onChange={v=>update('phone',v)}/><TextInput label="כתובת העסק" value={settings.address} onChange={v=>update('address',v)}/></>}{index===1&&<><TextInput label="דוא״ל" value={settings.email} onChange={v=>update('email',v)}/><TextInput label="טלפון ליצירת קשר" value={settings.phone} onChange={v=>update('phone',v)}/></>}{index===2&&<><Text>בחרו צבע למערכת</Text><HStack gap={1}>{['כחול','ירוק','סגול','אפור'].map(color=><Button key={color} label={color} variant={settings.color===color?'primary':'secondary'} onClick={()=>update('color',color)}/>)}</HStack></>}{index===3&&<><Text>תנאים שמורים יופיעו בהצעות מחיר חדשות.</Text><TextInput label="תנאי תשלום ברירת מחדל" value={settings.terms} onChange={v=>update('terms',v)}/></>}{index===4&&<><CheckboxInput label="חתימה דיגיטלית כברירת מחדל" value={settings.defaultSignature!==false} onChange={v=>update('defaultSignature',v)}/><Text>התהליך דורש חיבור לספק חתימות כדי לשלוח מסמכים ולאמת חתימות.</Text></>}{index===5&&<><Text>אפשר להשתמש בתבנית להצעה חדשה או למסמך לחתימה.</Text><HStack gap={2}><Button label="תבנית הצעה בסיסית" onClick={()=>notice('התבנית זמינה ביצירת הצעת מחיר חדשה.')}/><Button label="תבנית הסכם שירות" onClick={()=>notice('התבנית זמינה ביצירת מסמך חדש.')}/></HStack></>}<Divider/><Button label="שמירת הגדרות" variant="primary" onClick={()=>notice('ההגדרות נשמרו במכשיר זה')}/></VStack></Section>)}</VStack></HStack>;}
+function Payments({notice}){const [open,setOpen]=useState(false);const [details,setDetails]=useState({name:'',business:'',email:'',phone:''});const set=(k,v)=>setDetails(s=>({...s,[k]:v}));const fees=[{kind:'עמלת בסיס — ויזה, מאסטרקארד, ישראכרט',fee:'1.20%'},{kind:'אמריקן אקספרס (Amex)',fee:'2.20%'},{kind:'ביט (Bit)',fee:'1.50%'},{kind:'דיינרס (Diners)',fee:'1.40%'}];return <><Section padding={5}><VStack gap={4}><Text type="supporting" color="secondary">Easy Card × QuoteDesk — התחלת סליקה ללקוחות המערכת</Text><Heading level={2}>קבלו תשלום בכרטיס אשראי ישירות מתוך QuoteDesk</Heading><Text>שלחו הצעת מחיר ללקוח, אפשרו לו לשלם אונליין, שלחו קישור לתשלום מקדמה וקבלו תשלומים ישירות לעסק. החיבור כולל תשלום מהצעת מחיר, קישור למקדמה, סליקה מאובטחת והקמה תוך יום עסקים אחד בכפוף לאישור.</Text><Heading level={3}>חבילה ותמחור</Heading><Text>דמי שימוש חודשיים: 35 ₪ לחודש, בתשלום ישירות לחברת Easy Card. כל המחירים והעמלות אינם כוללים מע״מ.</Text><Table data={fees} columns={[{key:'kind',header:'סוג העסקה / הכרטיס'},{key:'fee',header:'עמלה'}]} idKey="kind"/><Text>הקמה תוך יום עסקים אחד, בכפוף לאישור חברות האשראי, בדיקות KYC/AML ומדיניות ניהול סיכונים של Easy Card.</Text><Heading level={3}>מכשיר סליקה פיזי (אופציונלי)</Heading><Text>PAX A77 או Nayax F45: רכישה ב־1,399 ₪, דמי שימוש 33 ₪ לחודש, ודמי SIM ב־11 ₪ לחודש אם נדרש.</Text><Button label="פתיחת חשבון סליקה" variant="primary" onClick={()=>setOpen(true)}/><Text type="supporting" color="secondary">ההצטרפות והתשלום מתבצעים ישירות מול Easy Card.</Text></VStack></Section><Dialog isOpen={open} onOpenChange={setOpen} width="min(600px, 94vw)" purpose="form"><VStack gap={3}><DialogHeader><Heading level={2}>פתיחת חשבון סליקה</Heading></DialogHeader><Text>הבקשה מוגשת ישירות ל־Easy Card. חיבור מאושר להעברת הבקשה אינו מוגדר בסביבת ההדגמה.</Text><TextInput label="שם מלא" value={details.name} onChange={v=>set('name',v)}/><TextInput label="שם העסק" value={details.business} onChange={v=>set('business',v)}/><TextInput label="דוא״ל" type="email" value={details.email} onChange={v=>set('email',v)}/><TextInput label="טלפון" value={details.phone} onChange={v=>set('phone',v)}/><HStack justify="end"><Button label="סגירה" onClick={()=>setOpen(false)}/><Button label="שמירת טיוטה מקומית" variant="primary" onClick={()=>{setOpen(false);notice('הפרטים נשארו בטופס ולא הועברו לספק.');}}/></HStack></VStack></Dialog></>;}
+
+createRoot(document.getElementById('root')).render(<App/>);
