@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#171426" />
+    <meta name="description" content="מערכת פשוטה לניהול הצעות מחיר, משימות, אנשי קשר ומסמכים." />
+    <title>QuoteDesk — ניהול הצעות מחיר</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#dashboard" aria-label="QuoteDesk — ראשי">
+          <span class="brand-mark">Q</span>
+          <span><strong>QuoteDesk</strong><small>ניהול העסק בפשטות</small></span>
+        </a>
+        <div class="workspace-switch"><span class="workspace-avatar">א</span><span><b>העסק שלי</b><small>סביבת עבודה</small></span><span class="chevron">⌄</span></div>
+        <p class="nav-label">סביבת עבודה</p>
+        <nav class="main-nav" aria-label="ניווט ראשי">
+          <button class="nav-item active" data-page="dashboard"><span class="nav-icon">⌂</span><span>סקירה כללית</span></button>
+          <button class="nav-item" data-page="quotes"><span class="nav-icon">▤</span><span>הצעות מחיר</span><span class="nav-count" id="quote-nav-count">0</span></button>
+          <button class="nav-item" data-page="tasks"><span class="nav-icon">✓</span><span>משימות</span><span class="nav-count" id="task-nav-count">0</span></button>
+          <button class="nav-item" data-page="contacts"><span class="nav-icon">♧</span><span>אנשי קשר</span></button>
+          <button class="nav-item" data-page="documents"><span class="nav-icon">▧</span><span>מסמכים לחתימה</span></button>
+          <button class="nav-item" data-page="payments"><span class="nav-icon">↗</span><span>קבלת תשלומים</span></button>
+        </nav>
+        <div class="sidebar-spacer"></div>
+        <div class="help-card"><span class="help-spark">✦</span><b>צריכים עזרה?</b><p>כל מה שצריך כדי לנהל הצעות בביטחון.</p><button data-action="help">מרכז העזרה <span>←</span></button></div>
+        <button class="nav-item settings-link" data-page="settings"><span class="nav-icon">⚙</span><span>הגדרות</span></button>
+        <div class="profile-mini"><span class="profile-avatar">ד</span><span><b>דנה לוי</b><small>מנהלת העסק</small></span><button aria-label="אפשרויות משתמש" class="dots">···</button></div>
+      </aside>
+
+      <main class="main-area">
+        <header class="topbar">
+          <button class="mobile-menu icon-button" id="mobile-menu" aria-label="פתיחת תפריט">☰</button>
+          <div class="breadcrumbs"><span>סביבת עבודה</span><b>›</b><strong id="page-crumb">סקירה כללית</strong></div>
+          <div class="top-actions">
+            <label class="global-search"><span>⌕</span><input id="global-search" type="search" placeholder="חיפוש מהיר..." aria-label="חיפוש מהיר" /><kbd>⌘ K</kbd></label>
+            <button class="icon-button notification-button" aria-label="התראות">♧<i></i></button>
+            <span class="top-avatar">ד</span>
+          </div>
+        </header>
+        <div id="page-content" class="page-content"></div>
+      </main>
+    </div>
+    <div id="modal-root"></div>
+    <div class="mobile-overlay"></div>
+    <div class="toast-region" id="toast-region" aria-live="polite"></div>
+  </body>
+</html>
