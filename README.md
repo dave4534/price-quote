@@ -1,22 +1,32 @@
 # QuoteDesk
 
-Hebrew right-to-left quote management interface built with React, Vite, and Astryx Design System.
+Hebrew right-to-left quoting app for a field-service business: quote templates, quotes with customer e-signature and PDF export, signature documents, a digital business card, contacts, and an API for automations. React + Astryx Design System, one Node serverless function on Vercel, private Vercel Blob storage.
 
 ## Run locally
 
 ```sh
 npm install
+cp .env.example .env.local   # fill in the three values
 npm run dev
 ```
 
-## Included workflows
+Local data is written to `.data/`. PDF export uses the installed Google Chrome (override with `CHROME_PATH`).
 
-- Quote list with search, status filters, totals, itemized pricing, editing, duplication, and deletion.
-- Contact directory with search, create/edit, and starting a quote for a contact.
-- Signature-document list and local draft form with recipient, due date, signature option, and optional PDF selection.
-- Payment-provider information and a local eligibility form.
-- One continuous settings page with side anchors.
+## Deploy
 
-Records use synthetic examples and are stored in the current browser's local storage. Signature delivery, payment processing, and sending documents require provider integrations and are not connected.
+Needs a **private** Vercel Blob store connected to the project, and the environment variables `APP_PASSWORD`, `API_KEY` and `SESSION_SECRET`. Without them the app refuses all access.
 
-Invoices, statistics, business expenses, business cards, and Tasks are excluded.
+## API
+
+Documented in the app under **API ותיעוד** and as OpenAPI at `/api/openapi.json`. Authenticate with `Authorization: Bearer <API_KEY>`.
+
+## Privacy
+
+This repository is public. Business details, templates, bank details, customers and signatures live only in the private store. Never commit them.
+
+## Limits
+
+- Nothing is sent automatically: WhatsApp and email buttons open the owner's own app with the message ready.
+- Signatures are drawn signatures with name, time and IP address. They are not certified electronic signatures.
+- One shared owner password; no separate staff accounts.
+- Invoices, expenses, tasks, calendar sync and card payments are not included.
